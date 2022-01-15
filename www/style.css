@@ -3,8 +3,12 @@ html, body {
   width: 100%;
   background: #0E1927;
   color: #fff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
 }
-
+.context-menu .item{
+  padding: 10px 20px !important;
+  /*background: #0E1927 !important;*/
+}
 .node .control input, .node .input-control input {
   width: 140px;
   border-radius: 3px;
@@ -22,21 +26,21 @@ select, input {
   font-size: 110%;
   width: 170px;
 }
-.editor .socket.output.number-value,
-.editor .socket.input.number-value{
+.editor .socket.output.policy,
+.editor .socket.input.policy{
   /*width: 15px;*/
   /*height: 15px;*/
   background: #4A90E2;
   border: 2px solid #4A90E2;
 }
-/*.editor .socket.output.number-value{
+/*.editor .socket.output.policy{
   margin-right: -7px;
 }
-.editor .socket.input.number-value{
+.editor .socket.input.policy{
   margin-left: -7px;
 }
 */
-.editor .socket.output.number-value:hover{
+.editor .socket.output.policy:hover{
   border: 2px solid rgba(255,255,255,0.5);
 }
 
