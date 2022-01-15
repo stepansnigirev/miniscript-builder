@@ -1,0 +1,81 @@
+html, body {
+  height: 100%;
+  width: 100%;
+  background: #0E1927;
+  color: #fff;
+}
+
+.node .control input, .node .input-control input {
+  width: 140px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  background-color: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+select, input {
+  width: 100%;
+  border-radius: 30px;
+  background-color: white;
+  padding: 2px 6px;
+  border: 1px solid #999;
+  font-size: 110%;
+  width: 170px;
+}
+.editor .socket.output.number-value,
+.editor .socket.input.number-value{
+  /*width: 15px;*/
+  /*height: 15px;*/
+  background: #4A90E2;
+  border: 2px solid #4A90E2;
+}
+/*.editor .socket.output.number-value{
+  margin-right: -7px;
+}
+.editor .socket.input.number-value{
+  margin-left: -7px;
+}
+*/
+.editor .socket.output.number-value:hover{
+  border: 2px solid rgba(255,255,255,0.5);
+}
+
+.editor .node .title{
+  background: rgba(0,0,0,0.15);
+  border-radius: 10px 10px 0 0;
+  font-weight: bold;
+  text-align: center;
+  font-size: 16px !important;
+  margin-bottom: 10px;
+}
+
+.editor .node,
+.editor .node,
+.editor .node:hover,
+.editor .node:hover,
+.editor .node.selected,
+.editor .node.selected,
+.editor .node.selected:hover,
+.editor .node.selected:hover {
+  background-color: #202A40 !important;
+  border: 1px transparent !important;
+}
+
+.editor .node.number:hover,
+.editor .node.add:hover {
+  box-shadow: 0px 0px 2px #4A90E2;
+}
+
+.editor .node.selected.number,
+.editor .node.selected.add,
+.editor .node.selected.number:hover,
+.editor .node.selected.add:hover {
+  /*box-shadow: 0px 0px 3px #4A90E2;*/
+}
+
+
+/*.node .title,
+.node .output-title,
+.node .input-title {
+  color: black !important;
+}*/
