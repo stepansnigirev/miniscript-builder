@@ -26,6 +26,39 @@ select, input {
   font-size: 110%;
   width: 170px;
 }
+
+::-webkit-scrollbar {
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.5);
+}
+
+.preview{
+  height: 35px;
+  max-width: 170px;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  white-space: nowrap;
+  opacity: 0.7;
+  /*background: rgba(0,0,0,0.2);*/
+  /*padding: 3px;*/
+}
+/*.node.threshold .preview,
+.node.and .preview,
+.node.or .preview{
+  height: 120px;
+  word-break: break-all;
+  overflow-y: scroll;
+}
+*/
 .editor .socket.output.policy,
 .editor .socket.input.policy{
   /*width: 15px;*/

@@ -1,4 +1,4 @@
-# Wasm Rust elements functions
+# Wasm Rust miniscript functions
 
 ## build
 

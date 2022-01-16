@@ -50,6 +50,30 @@ var VueStringControl = {
   }
 }
 
+var VuePreviewControl = {
+  props: ['readonly', 'emitter', 'ikey', 'getData', 'putData'],
+  template: `<div class="preview">{{value}}</div><input type="hidden" :readonly="readonly" :value="value" @input="change($event)" @dblclick.stop="" @pointerdown.stop="" @pointermove.stop=""/>`,
+  data() {
+    return {
+      value: "",
+    }
+  },
+  methods: {
+    change(e){
+      this.value = e.target.value;
+      this.update();
+    },
+    update() {
+      if (this.ikey)
+        this.putData(this.ikey, this.value)
+      this.emitter.trigger('process');
+    }
+  },
+  mounted() {
+    this.value = this.getData(this.ikey);
+  }
+}
+
 class NumControl extends Rete.Control {
 
   constructor(emitter, key, readonly) {
@@ -68,6 +92,19 @@ class StringControl extends Rete.Control {
   constructor(emitter, key, readonly) {
     super(key);
     this.component = VueStringControl;
+    this.props = { emitter, ikey: key, readonly };
+  }
+
+  setValue(val) {
+    this.vueContext.value = val;
+  }
+}
+
+class PreviewControl extends Rete.Control {
+
+  constructor(emitter, key, readonly) {
+    super(key);
+    this.component = VuePreviewControl;
     this.props = { emitter, ikey: key, readonly };
   }
 
@@ -125,7 +162,7 @@ class AndComponent extends Rete.Component {
     return node
         .addInput(inp1)
         .addInput(inp2)
-        .addControl(new StringControl(this.editor, 'preview', true))
+        .addControl(new PreviewControl(this.editor, 'preview', true))
         .addOutput(out);
   }
 
@@ -156,7 +193,7 @@ class OrComponent extends Rete.Component {
     return node
         .addInput(inp1)
         .addInput(inp2)
-        .addControl(new StringControl(this.editor, 'preview', true))
+        .addControl(new PreviewControl(this.editor, 'preview', true))
         .addOutput(out);
   }
 
@@ -177,19 +214,17 @@ class TimeComponent extends Rete.Component {
   }
 
   builder(node) {
-    var inp = new Rete.Input('num',"Number", numSocket);
+    // var inp = new Rete.Input('num',"Number", numSocket);
     var out = new Rete.Output('pol', "Policy", policySocket);
 
-    inp.addControl(new NumControl(this.editor, 'num'))
-
     return node
-        .addInput(inp)
-        .addControl(new StringControl(this.editor, 'preview', true))
+        .addControl(new PreviewControl(this.editor, 'preview', true))
+        .addControl(new NumControl(this.editor, 'num'))
         .addOutput(out);
   }
 
   worker(node, inputs, outputs) {
-    var n = inputs['num'].length ? inputs['num'][0]:node.data.num;
+    var n = node.data.num;
     n = (n==undefined) ? 0 : n;
     var pol = `${this._op}(${n})`;
 
@@ -204,22 +239,20 @@ class ThreshComponent extends Rete.Component {
   }
 
   builder(node) {
-    var inp1 = new Rete.Input('num',"Threshold", numSocket);
-    var inp2 = new Rete.Input('pol1', "Policy", policySocket);
+    var pol1 = new Rete.Input('pol1', "Policy", policySocket);
     var out = new Rete.Output('pol', "Policy", policySocket);
 
-    inp1.addControl(new NumControl(this.editor, 'num'))
-    inp2.addControl(new StringControl(this.editor, 'pol1'))
+    pol1.addControl(new StringControl(this.editor, 'pol1'))
 
     return node
-        .addInput(inp1)
-        .addInput(inp2)
-        .addControl(new StringControl(this.editor, 'preview', true))
+        .addInput(pol1)
+        .addControl(new PreviewControl(this.editor, 'preview', true))
+        .addControl(new NumControl(this.editor, 'thresh'))
         .addOutput(out);
   }
 
   worker(node, inputs, outputs) {
-    let n = inputs['num'].length ? inputs['num'][0]:node.data.num;
+    let n = node.data.thresh;
     n = (n==undefined) ? 1 : n;
     let nodeobj = this.editor.nodes.find(n => n.id == node.id);
     // add missing sockets
@@ -231,7 +264,7 @@ class ThreshComponent extends Rete.Component {
       }
     }
     // remove empty sockets at the end, keep only one
-    for(let i = nodeobj.inputs.size; i > n; i--){
+    for(let i = nodeobj.inputs.size+1; i > n; i--){
       let k = `pol${i}`;
       let inp = nodeobj.inputs.get(k);
       if(inp){
@@ -239,7 +272,7 @@ class ThreshComponent extends Rete.Component {
         let pol = (inputs[k] && inputs[k].length) ? inputs[k][0]:node.data[k];
         if(pol){
           // last is connected - we actually need to add one
-          if(i == nodeobj.inputs.size - 1){
+          if(i == nodeobj.inputs.size){
             if(inputs[`pol${i+1}`] == undefined){
               let newinp = new Rete.Input(`pol${i+1}`, "Policy", policySocket);
               newinp.addControl(new StringControl(this.editor, `pol${i+1}`));
@@ -256,31 +289,31 @@ class ThreshComponent extends Rete.Component {
       }
     }
     let args = "";
-    let m = nodeobj.inputs.size;
+    let m = nodeobj.inputs.size+1;
     for(let i = 1; i<= m; i++){
       let k = `pol${i}`;
       let pol = (inputs[k] && inputs[k].length) ? inputs[k][0]:node.data[k];
       if(pol){
-        args += `,${pol}`;
+        args += `, ${pol}`;
       }
     }
     let pol = `thresh(${n}${args})`;
     nodeobj.controls.get('preview').setValue(pol);
-    nodeobj.update();
     outputs['pol'] = pol;
+    nodeobj.update();
   }
 }
 
 (async () => {
   var container = document.querySelector('#rete');
+  let AndC = new AndComponent();
+  let AfterC = new TimeComponent("After");
+  let OlderC = new TimeComponent("Older");
+  let ThreshC = new ThreshComponent();
+  let KeyC = new KeyComponent();
+  let OrC = new OrComponent();
   var components = [
-    new NumComponent(),
-    new AndComponent(),
-    new TimeComponent("After"),
-    new TimeComponent("Older"),
-    new ThreshComponent(),
-    new KeyComponent(),
-    new OrComponent(),
+    KeyC, AfterC, OlderC, ThreshC, AndC, OrC
   ];
 
   var editor = new Rete.NodeEditor('demo@0.1.0', container);
@@ -301,16 +334,19 @@ class ThreshComponent extends Rete.Component {
     engine.register(c);
   });
 
-  var n1 = await components[2].createNode({num: 15});
-  var n2 = await components[3].createNode({num: 25});
-  var thresh = await components[4].createNode({num: 2});
+  var n1 = await OlderC.createNode({num: 12960});
+  var n2 = await KeyC.createNode({key: "xpub6BoPBGjkVAcue1y571JydPTaQ5iLfERUDxgao7ZRLiB2LDvvezCcsZymMJTfXWqRkGpeBNReNyNjEUN9HzTeX8mzbzvyzmsBWHkgwbZhGny"});
+  var n3 = await KeyC.createNode({key: "key B"});
+  var thresh = await ThreshC.createNode({thresh: 2});
 
   n1.position = [80, 200];
   n2.position = [80, 400];
+  n3.position = [80, 570];
   thresh.position = [500, 240];
 
   editor.addNode(n1);
   editor.addNode(n2);
+  editor.addNode(n3);
   editor.addNode(thresh);
 
   editor.connect(n1.outputs.get('pol'), thresh.inputs.get('pol1'));
