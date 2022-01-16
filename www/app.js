@@ -382,6 +382,17 @@ function fromBase64(b64){
   return JSON.parse(atob(b64.replace(/_/g, '/').replace(/-/g, '+')));
 }
 
+async function loadHash(){
+  try{
+    let o = fromBase64(window.location.hash.substr("#/full/".length))
+    await editor.fromJSON(o);
+    editor.view.resize();
+    AreaPlugin.zoomAt(editor);
+  }catch(e){
+    console.error(`Error: ${e}`)
+  }
+}
+
 /*************************** APP MAIN *************************/
 
 async function app_init(){
@@ -422,12 +433,7 @@ async function app_init(){
   });
 
   if(window.location.hash.startsWith("#/full/")){
-    try{
-      let o = fromBase64(window.location.hash.substr("#/full/".length))
-      await editor.fromJSON(o);
-    }catch(e){
-      console.error(`Error: ${e}`)
-    }
+    await loadHash();
   }else{
     let n1 = await OlderC.createNode({num: 12960});
     let n2 = await KeyC.createNode({key: "xpub6BoPBGjkVAcue1y571JydPTaQ5iLfERUDxgao7ZRLiB2LDvvezCcsZymMJTfXWqRkGpeBNReNyNjEUN9HzTeX8mzbzvyzmsBWHkgwbZhGny/0/*"});
@@ -455,6 +461,9 @@ async function app_init(){
     editor.connect(n2.outputs.get('key'), thresh.inputs.get('pol2'));
     editor.connect(n3.outputs.get('key'), thresh.inputs.get('pol3'));
     editor.connect(desc.outputs.get('desc'), addr.inputs.get('desc'));
+
+    editor.view.resize();
+    AreaPlugin.zoomAt(editor);
   }
 
   editor.on('process nodecreated noderemoved connectioncreated connectionremoved', async () => {
@@ -471,8 +480,17 @@ async function app_init(){
     window.location.hash = "/full/"+h;
   });
 
-  editor.view.resize();
-  AreaPlugin.zoomAt(editor);
   editor.trigger('process');
+
+  // on hash change
+  window.addEventListener("hashchange", async ()=>{
+    let obj = editor.toJSON();
+    let h = toBase64(obj);
+    let prevhash = "#/full/"+h;
+    // external hash change
+    if(window.location.hash != prevhash){
+      loadHash();
+    }
+  }, false);
 
 };
