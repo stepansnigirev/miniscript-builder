@@ -28,3 +28,5 @@ Planned:
   - [ ] finalize psbt
   - [ ] Specter-DIY QR support
 - [ ] allow xprv and WIF keys?
+- [ ] taproot and tapscript
+- [ ] wpkh, sh(wsh), sh(wpkh)

@@ -461,11 +461,20 @@ class AddressComponent extends Rete.Component {
 }
 
 function toBase64(obj){
+  // ugly hack: inject network here
+  obj.network = network;
   return btoa(JSON.stringify(obj)).replace(/\//g, '_').replace(/\+/g, '-');
 }
 
 function fromBase64(b64){
-  return JSON.parse(atob(b64.replace(/_/g, '/').replace(/-/g, '+')));
+  let obj = JSON.parse(atob(b64.replace(/_/g, '/').replace(/-/g, '+')));
+  // ugly hack: get network from obj
+  let net = obj.network;
+  if(net != undefined){
+    document.getElementById("network").value = net;
+    network = net;
+  }
+  return obj;
 }
 
 async function loadHash(){
@@ -474,6 +483,11 @@ async function loadHash(){
     await editor.fromJSON(o);
     editor.view.resize();
     AreaPlugin.zoomAt(editor);
+    // select descriptor by default
+    let d = editor.nodes.find(n => n.name == "Descriptor");
+    if(d){
+      editor.selectNode(d);
+    }
   }catch(e){
     console.error(`Error: ${e}`)
   }
