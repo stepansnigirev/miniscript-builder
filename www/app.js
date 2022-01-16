@@ -288,7 +288,7 @@ class ThreshComponent extends Rete.Component {
   editor.use(VueRenderPlugin.default);    
   editor.use(ContextMenuPlugin.default, {
     searchBar: false,
-    delay: 10000});
+  });
   editor.use(AreaPlugin);
   editor.use(CommentPlugin.default);
   editor.use(HistoryPlugin);
