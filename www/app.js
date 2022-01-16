@@ -549,8 +549,8 @@ async function app_init(){
     searchBar: false,
   });
   editor.use(AreaPlugin);
-  editor.use(CommentPlugin.default);
-  editor.use(HistoryPlugin);
+  // editor.use(CommentPlugin.default);
+  // editor.use(HistoryPlugin);
   // editor.use(DockPlugin.default,{
   //   container: document.querySelector('#dock'),
   //   // itemClass: 'item' // default: dock-item 
@@ -568,31 +568,39 @@ async function app_init(){
   if(window.location.hash.startsWith("#/full/")){
     await loadHash();
   }else{
-    let n1 = await OlderC.createNode({num: 12960});
-    let n2 = await KeyC.createNode({key: "xpub6BoPBGjkVAcue1y571JydPTaQ5iLfERUDxgao7ZRLiB2LDvvezCcsZymMJTfXWqRkGpeBNReNyNjEUN9HzTeX8mzbzvyzmsBWHkgwbZhGny/0/*"});
-    let n3 = await KeyC.createNode({key: "038b4059419fe3b95acdee6aff2f9afdca87231d14bd2cbcd3367b11d9d819a71d"});
+    let p1 = await OlderC.createNode({num: 12960});
+    let mn = await BIP39_C.createNode({
+                    mnemonic: "crash fatal hollow thank swallow submit tattoo portion code foam math force",
+                    password:"",
+                    derivation:"m/48h/0h/0h/2h",
+    });
+    let p2 = await KeyC.createNode();
+    let p3 = await KeyC.createNode({key: "038b4059419fe3b95acdee6aff2f9afdca87231d14bd2cbcd3367b11d9d819a71d"});
     let thresh = await ThreshC.createNode({thresh: 2});
     let desc = await DescC.createNode();
     let addr = await AddressC.createNode({idx: 0});
 
-    n1.position = [80, 200];
-    n2.position = [80, 400];
-    n3.position = [80, 570];
+    p1.position = [80, 200];
+    mn.position = [-200, 400];
+    p2.position = [80, 400];
+    p3.position = [80, 600];
     thresh.position = [500, 240];
     desc.position = [800, 240];
     addr.position = [1100, 240];
 
-    editor.addNode(n1);
-    editor.addNode(n2);
-    editor.addNode(n3);
+    editor.addNode(p1);
+    editor.addNode(mn);
+    editor.addNode(p2);
+    editor.addNode(p3);
     editor.addNode(thresh);
     editor.addNode(desc);
     editor.addNode(addr);
 
-    editor.connect(n1.outputs.get('pol'), thresh.inputs.get('policies'));
+    editor.connect(mn.outputs.get('key'), p2.inputs.get('key'));
+    editor.connect(p1.outputs.get('pol'), thresh.inputs.get('policies'));
     editor.connect(thresh.outputs.get('pol'), desc.inputs.get('pol'));
-    editor.connect(n2.outputs.get('key'), thresh.inputs.get('policies'));
-    editor.connect(n3.outputs.get('key'), thresh.inputs.get('policies'));
+    editor.connect(p2.outputs.get('key'), thresh.inputs.get('policies'));
+    editor.connect(p3.outputs.get('key'), thresh.inputs.get('policies'));
     editor.connect(desc.outputs.get('desc'), addr.inputs.get('desc'));
 
     editor.view.resize();
