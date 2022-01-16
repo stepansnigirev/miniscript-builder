@@ -57,6 +57,21 @@ select, input {
   width: 170px;
 }
 
+#dock{
+  width: 90%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+#network{
+  background: rgba(255,255,255,0.5);
+  color: #000;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 10px;
+  padding: 5px;
+}
+
 .preview::-webkit-scrollbar {
   height: 10px;
 }
@@ -73,7 +88,7 @@ select, input {
 
 .preview{
   height: 35px;
-  max-width: 170px;
+  max-width: 150px;
   overflow-x: scroll;
   overflow-y: hidden;
   white-space: nowrap;

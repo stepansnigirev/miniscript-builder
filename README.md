@@ -16,8 +16,8 @@ Planned:
 - [x] address derivation
 - [x] automatic url encoding of full editor state (`#/full/b64-encoded-json`)
 - [x] node inspector with node output
-- [ ] network selector (bitcoin / testnet / regtest / signet)
-- [ ] bip39 and DescriptorKey nodes (mnemonic to root key, then derive with path and select allowed derivation)
+- [x] bip39 and DescriptorKey nodes (mnemonic to root key, then derive with path and select allowed derivation)
+- [x] network selector (bitcoin / testnet / regtest / signet)
 - [ ] use sortedmulti instead of multi
 - [ ] allow aliases for keys (any string instead of a valid (x)pub)
 - [ ] build nodes from url with policy (`#/policy/andor(blah(blah))`)

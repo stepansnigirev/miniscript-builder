@@ -7,7 +7,17 @@
   <link rel="stylesheet" type="text/css" href="./www/style.css">
 </head>
 <body>
-  <div id="dock" class="editor">Right-click to add or delete nodes.</div>
+  <div id="dock" class="editor">
+    <div><small>Right-click to add or delete nodes.</small></div>
+    <label for="network">Network:
+      <select name="network" id="network" onchange="updateNetwork()">
+        <option value="bitcoin">Mainnet</option>
+        <option value="testnet">Testnet</option>
+        <option value="regtest">Regtest</option>
+        <option value="signet">Signet</option>
+      </select>
+    </label>
+  </div>
   <div id="rete" class="editor"></div>
   <div id="inspector">
     <div class="title">Selected node: <span id="node-name"></span></div>

@@ -9,6 +9,8 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+var network = "bitcoin";
+
 /*************************** TEMPLATES *************************/
 
 // TODO: lots of copy-paste, figure out how to simplify
@@ -194,7 +196,7 @@ class BIP39Component extends Rete.Component {
       let mnemonic = (node.data.mnemonic) ? node.data.mnemonic : '';
       let password = (node.data.password) ? node.data.password : '';
       let derivation = (node.data.derivation) ? node.data.derivation : 'm';
-      out = miniscript.bip39_derive(mnemonic, password, derivation) + "/0/*";
+      out = miniscript.bip39_derive(mnemonic, password, derivation, network) + "/0/*";
     }catch (e){
       out = `${e}`;
       console.error(e);
@@ -449,7 +451,7 @@ class AddressComponent extends Rete.Component {
     let idx = node.data.idx;
     let addr = '';
     try{
-      addr = miniscript.address(desc, idx);
+      addr = miniscript.address(desc, idx, network);
     }catch(e){
       addr = `Error: ${e}`;
     }
@@ -488,6 +490,11 @@ function displayOut(node){
   }catch(e){
     console.error(e);
   }
+}
+
+async function updateNetwork(){
+  network = document.getElementById("network").value;
+  editor.trigger('process');
 }
 
 async function app_init(){
@@ -549,7 +556,7 @@ async function app_init(){
   }else{
     let n1 = await OlderC.createNode({num: 12960});
     let n2 = await KeyC.createNode({key: "xpub6BoPBGjkVAcue1y571JydPTaQ5iLfERUDxgao7ZRLiB2LDvvezCcsZymMJTfXWqRkGpeBNReNyNjEUN9HzTeX8mzbzvyzmsBWHkgwbZhGny/0/*"});
-    let n3 = await KeyC.createNode({key: "020202020202020202020202020202020202020202020202020202020202020202"});
+    let n3 = await KeyC.createNode({key: "038b4059419fe3b95acdee6aff2f9afdca87231d14bd2cbcd3367b11d9d819a71d"});
     let thresh = await ThreshC.createNode({thresh: 2});
     let desc = await DescC.createNode();
     let addr = await AddressC.createNode({idx: 0});

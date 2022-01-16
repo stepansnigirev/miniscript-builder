@@ -30,24 +30,26 @@ pub fn compile(policy: &str) -> Result<JsValue, JsValue>{
 }
 
 #[wasm_bindgen]
-pub fn address(desc: &str, idx: u32) -> Result<JsValue, JsValue>{
+pub fn address(desc: &str, idx: u32, network: &str) -> Result<JsValue, JsValue>{
+    let network = jserr!(network.parse::<bitcoin::Network>());
     if idx >= 0x80000000 {
         return Err(JsValue::from("Invalid index"));
     }
     let secp_ctx = secp256k1::Secp256k1::verification_only();
     let desc = jserr!(Descriptor::<DescriptorPublicKey>::from_str(desc));
     let desc = jserr!(desc.derive(idx).translate_pk2(|xpk| xpk.derive_public_key(&secp_ctx).map(bitcoin::PublicKey::new)));
-    let addr = jserr!(desc.address(bitcoin::Network::Bitcoin));
+    let addr = jserr!(desc.address(network));
     Ok(addr.to_string().into())
 }
 
 #[wasm_bindgen]
-pub fn bip39_root(mnemonic: &str, password: &str) -> Result<JsValue, JsValue> {
+pub fn bip39_root(mnemonic: &str, password: &str, network: &str) -> Result<JsValue, JsValue> {
+    let network = jserr!(network.parse::<bitcoin::Network>());
     let mnemonic = jserr!(Mnemonic::parse(mnemonic));
     let seed = mnemonic.to_seed(password);
 
     // generate root bip-32 key from seed
-    let root = jserr!(ExtendedPrivKey::new_master(bitcoin::Network::Bitcoin, &seed));
+    let root = jserr!(ExtendedPrivKey::new_master(network, &seed));
 
     let secp_ctx = secp256k1::Secp256k1::new();
     let fingerprint = root.fingerprint(&secp_ctx);
@@ -55,14 +57,15 @@ pub fn bip39_root(mnemonic: &str, password: &str) -> Result<JsValue, JsValue> {
 }
 
 #[wasm_bindgen]
-pub fn bip39_derive(mnemonic: &str, password: &str, path: &str) -> Result<JsValue, JsValue> {
+pub fn bip39_derive(mnemonic: &str, password: &str, path: &str, network: &str) -> Result<JsValue, JsValue> {
+    let network = jserr!(network.parse::<bitcoin::Network>());
     let mnemonic = jserr!(Mnemonic::parse(mnemonic));
     let seed = mnemonic.to_seed(password);
     let derivation = jserr!(DerivationPath::from_str(path));
 
     // generate root bip-32 key from seed
     let secp_ctx = secp256k1::Secp256k1::new();
-    let root = jserr!(ExtendedPrivKey::new_master(bitcoin::Network::Bitcoin, &seed));
+    let root = jserr!(ExtendedPrivKey::new_master(network, &seed));
     let fingerprint = root.fingerprint(&secp_ctx);
 
     let child = jserr!(root.derive_priv(&secp_ctx, &derivation));
