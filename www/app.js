@@ -218,7 +218,7 @@ class KeyComponent extends Rete.Component {
   builder(node) {
     var out = new Rete.Output('key', "Policy", policySocket);
     var inp = new Rete.Input("key", "Key", keySocket);
-    inp.addControl(new StringControl(this.editor, 'key', false, "Descriptor or Public Key:"));
+    inp.addControl(new StringControl(this.editor, 'key', false, "[Extended] Public Key:"));
     return node
               .addControl(new PreviewControl(this.editor, 'preview', true))
               .addInput(inp)
@@ -580,12 +580,12 @@ async function app_init(){
     ThreshC,
     AndC,
     OrC,
-    DescC,
-    AddressC,
     Sha256_C,
     Ripemd160_C,
     Hash256_C,
     Hash160_C,
+    DescC,
+    AddressC,
   ];
 
   window.editor = new Rete.NodeEditor('demo@0.1.0', container);
@@ -595,7 +595,7 @@ async function app_init(){
     searchBar: false,
   });
   editor.use(AreaPlugin);
-  // editor.use(CommentPlugin.default);
+  editor.use(CommentPlugin.default);
   editor.use(HistoryPlugin);
   // editor.use(DockPlugin.default,{
   //   container: document.querySelector('#dock'),
