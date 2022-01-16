@@ -104,11 +104,12 @@ select, input {
   box-shadow: 0px 0px 2px #4A90E2;
 }
 
-.editor .node.selected.number,
-.editor .node.selected.add,
-.editor .node.selected.number:hover,
-.editor .node.selected.add:hover {
-  /*box-shadow: 0px 0px 3px #4A90E2;*/
+.editor .node.selected,
+.editor .node.selected,
+.editor .node.selected:hover,
+.editor .node.selected:hover {
+  box-shadow: 0px 0px 5px #4A90E2 !important;
+  /*border: 1px #4A90E2 !important;*/
 }
 
 

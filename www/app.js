@@ -380,7 +380,7 @@ async function app_init(){
     KeyC, AfterC, OlderC, ThreshC, AndC, OrC, DescC, AddressC
   ];
 
-  let editor = new Rete.NodeEditor('demo@0.1.0', container);
+  window.editor = new Rete.NodeEditor('demo@0.1.0', container);
   editor.use(ConnectionPlugin.default);
   editor.use(VueRenderPlugin.default);    
   editor.use(ContextMenuPlugin.default, {
