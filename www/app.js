@@ -641,4 +641,9 @@ async function app_init(){
     }
   }, false);
 
+  // select descriptor by default
+  let d = editor.nodes.find(n => n.name == "Descriptor");
+  if(d){
+    editor.selectNode(d);
+  }
 };
