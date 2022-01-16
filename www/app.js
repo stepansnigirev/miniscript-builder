@@ -15,11 +15,12 @@ var network = "bitcoin";
 
 // TODO: lots of copy-paste, figure out how to simplify
 var VueNumControl = {
-  props: ['readonly', 'emitter', 'ikey', 'getData', 'putData'],
-  template: `<input type="number" min="0" step="1" :readonly="readonly" :value="value" @input="change($event)" @dblclick.stop="" @pointerdown.stop="" @pointermove.stop=""/>`,
+  props: ['readonly', 'emitter', 'ikey', 'getData', 'putData', 'label'],
+  template: `<div class="input-with-label"><div class="label">{{label}}</div><input type="number" min="0" step="1" :readonly="readonly" :value="value" @input="change($event)" @dblclick.stop="" @pointerdown.stop="" @pointermove.stop=""/></div>`,
   data() {
     return {
       value: 1,
+      label: "Number",
     }
   },
   methods: {
@@ -40,11 +41,12 @@ var VueNumControl = {
 
 // TODO: ugly, make label dynamic and styled in css
 var VueRatioControl = {
-  props: ['readonly', 'emitter', 'ikey', 'getData', 'putData'],
-  template: `<div height="20px"><small style="display:block;padding-bottom:2px">Probability ratio:</small><input type="number" min="0.01" max="100" step="any" :readonly="readonly" :value="value" @change="change($event)" @keyup.enter="change($event)" @dblclick.stop="" @pointerdown.stop="" @pointermove.stop=""/></div>`,
+  props: ['readonly', 'emitter', 'ikey', 'getData', 'putData', 'label'],
+  template: `<div class="input-with-label"><div class="label">{{label}}</div><input type="number" min="0.01" max="100" step="any" :readonly="readonly" :value="value" @change="change($event)" @keyup.enter="change($event)" @dblclick.stop="" @pointerdown.stop="" @pointermove.stop=""/></div>`,
   data() {
     return {
       value: 1,
+      label: "Ratio:",
     }
   },
   methods: {
@@ -70,11 +72,12 @@ var VueRatioControl = {
 }
 
 var VueStringControl = {
-  props: ['readonly', 'emitter', 'ikey', 'getData', 'putData'],
-  template: `<input type="text" :readonly="readonly" :value="value" @change="change($event)" @keyup.enter="change($event)" @dblclick.stop="" @pointerdown.stop="" @pointermove.stop=""/>`,
+  props: ['readonly', 'emitter', 'ikey', 'getData', 'putData', 'label'],
+  template: `<div class="input-with-label"><div class="label">{{label}}</div><input type="text" :readonly="readonly" :value="value" @change="change($event)" @keyup.enter="change($event)" @dblclick.stop="" @pointerdown.stop="" @pointermove.stop=""/></div>`,
   data() {
     return {
       value: "",
+      label: "",
     }
   },
   methods: {
@@ -95,7 +98,7 @@ var VueStringControl = {
 
 var VuePreviewControl = {
   props: ['readonly', 'emitter', 'ikey', 'getData', 'putData'],
-  template: `<div class="preview">{{value}}</div><input type="hidden" :readonly="readonly" :value="value" @input="change($event)" @dblclick.stop="" @pointerdown.stop="" @pointermove.stop=""/>`,
+  template: `<div class="preview">{{value}}</div>`,
   data() {
     return {
       value: "",
@@ -122,10 +125,10 @@ var VuePreviewControl = {
 // TODO: lots of copy-paste, figure out how to simplify
 class NumControl extends Rete.Control {
 
-  constructor(emitter, key, readonly) {
+  constructor(emitter, key, readonly, label="Number") {
     super(key);
     this.component = VueNumControl;
-    this.props = { emitter, ikey: key, readonly };
+    this.props = { emitter, ikey: key, readonly, label };
   }
 
   setValue(val) {
@@ -135,10 +138,10 @@ class NumControl extends Rete.Control {
 
 class RatioControl extends Rete.Control {
 
-  constructor(emitter, key, readonly) {
+  constructor(emitter, key, readonly, label="Probability ratio:") {
     super(key);
     this.component = VueRatioControl;
-    this.props = { emitter, ikey: key, readonly };
+    this.props = { emitter, ikey: key, readonly, label };
   }
 
   setValue(val) {
@@ -148,10 +151,10 @@ class RatioControl extends Rete.Control {
 
 class StringControl extends Rete.Control {
 
-  constructor(emitter, key, readonly) {
+  constructor(emitter, key, readonly, label="") {
     super(key);
     this.component = VueStringControl;
-    this.props = { emitter, ikey: key, readonly };
+    this.props = { emitter, ikey: key, readonly, label };
   }
 
   setValue(val) {
@@ -184,9 +187,9 @@ class BIP39Component extends Rete.Component {
     var out = new Rete.Output('key', "Key", keySocket);
     return node
             .addControl(new PreviewControl(this.editor, 'preview', true))
-            .addControl(new StringControl(this.editor, 'mnemonic'))
-            .addControl(new StringControl(this.editor, 'password'))
-            .addControl(new StringControl(this.editor, 'derivation'))
+            .addControl(new StringControl(this.editor, 'mnemonic', false, "Recovery phrase:"))
+            .addControl(new StringControl(this.editor, 'password', false, "Password:"))
+            .addControl(new StringControl(this.editor, 'derivation', false, "Derivation path:"))
             .addOutput(out);
   }
 
@@ -215,7 +218,7 @@ class KeyComponent extends Rete.Component {
   builder(node) {
     var out = new Rete.Output('key', "Policy", policySocket);
     var inp = new Rete.Input("key", "Key", keySocket);
-    inp.addControl(new StringControl(this.editor, 'key'));
+    inp.addControl(new StringControl(this.editor, 'key', false, "Descriptor or Public Key:"));
     return node
               .addControl(new PreviewControl(this.editor, 'preview', true))
               .addInput(inp)
@@ -315,6 +318,7 @@ class TimeComponent extends Rete.Component {
   constructor(name="After"){
     super(name);
     this._op = name.toLowerCase();
+    this._label = (this._op == "after") ? "Blockheight:" : "Blocks from prev tx:";
   }
 
   builder(node) {
@@ -323,7 +327,7 @@ class TimeComponent extends Rete.Component {
 
     return node
         .addControl(new PreviewControl(this.editor, 'preview', true))
-        .addControl(new NumControl(this.editor, 'num'))
+        .addControl(new NumControl(this.editor, 'num', false, this._label))
         .addOutput(out);
   }
 
@@ -341,6 +345,7 @@ class HashComponent extends Rete.Component {
   constructor(name="SHA256"){
     super(name);
     this._op = name.toLowerCase();
+    this._len = this._op.search("256") >= 0 ? 32 : 20
   }
 
   builder(node) {
@@ -349,7 +354,7 @@ class HashComponent extends Rete.Component {
 
     return node
         .addControl(new PreviewControl(this.editor, 'preview', true))
-        .addControl(new StringControl(this.editor, 'hash'))
+        .addControl(new StringControl(this.editor, 'hash', false, `${this._len}-byte hash in hex`))
         .addOutput(out);
   }
 
@@ -376,7 +381,7 @@ class ThreshComponent extends Rete.Component {
 
     return node
         .addControl(new PreviewControl(this.editor, 'preview', true))
-        .addControl(new NumControl(this.editor, 'thresh'))
+        .addControl(new NumControl(this.editor, 'thresh', false, "Threshold:"))
         .addOutput(out);
   }
 
@@ -437,12 +442,12 @@ class AddressComponent extends Rete.Component {
     var inp = new Rete.Input('desc',"Descriptor", descriptorSocket);
     var out = new Rete.Output('addr', "Address", stringSocket);
 
-    inp.addControl(new StringControl(this.editor, 'desc'))
+    inp.addControl(new StringControl(this.editor, 'desc', false, "Descriptor:"))
 
     return node
         .addInput(inp)
         .addControl(new PreviewControl(this.editor, 'preview', true))
-        .addControl(new NumControl(this.editor, 'idx'))
+        .addControl(new NumControl(this.editor, 'idx', false, "Index:"))
         .addOutput(out);
   }
 
