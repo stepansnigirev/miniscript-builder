@@ -389,6 +389,11 @@ async function app_init(){
   editor.use(AreaPlugin);
   editor.use(CommentPlugin.default);
   editor.use(HistoryPlugin);
+  // editor.use(DockPlugin.default,{
+  //   container: document.querySelector('#dock'),
+  //   // itemClass: 'item' // default: dock-item 
+  //   plugins: [VueRenderPlugin.default], // render plugins
+  // });
   editor.use(ConnectionMasteryPlugin.default);
 
   var engine = new Rete.Engine('demo@0.1.0');
