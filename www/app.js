@@ -235,13 +235,23 @@ class ThreshComponent extends Rete.Component {
   }
 
   builder(node) {
-    var pol1 = new Rete.Input('pol1', "Policy", policySocket);
+    let num_ins = 2;
+    if(node.data.thresh){
+      num_ins = (num_ins < (node.data.thresh+1)) ? (node.data.thresh+1) : num_ins;
+    }
+    if(node.data.num_inputs){
+      num_ins = (num_ins < node.data.num_inputs) ? node.data.num_inputs : num_ins;
+    }
+    for(let i=1; i<=num_ins; i++){
+      let pol = new Rete.Input(`pol${i}`, "Policy", policySocket);
+      pol.addControl(new StringControl(this.editor, `pol${i}`));
+      node.addInput(pol);
+    }
+
     var out = new Rete.Output('pol', "Policy", policySocket);
 
-    pol1.addControl(new StringControl(this.editor, 'pol1'))
 
     return node
-        .addInput(pol1)
         .addControl(new PreviewControl(this.editor, 'preview', true))
         .addControl(new NumControl(this.editor, 'thresh'))
         .addOutput(out);
@@ -364,6 +374,14 @@ class AddressComponent extends Rete.Component {
   }
 }
 
+function toBase64(obj){
+  return btoa(JSON.stringify(obj)).replace(/\//g, '_').replace(/\+/g, '-');
+}
+
+function fromBase64(b64){
+  return JSON.parse(atob(b64.replace(/_/g, '/').replace(/-/g, '+')));
+}
+
 /*************************** APP MAIN *************************/
 
 async function app_init(){
@@ -403,47 +421,58 @@ async function app_init(){
     engine.register(c);
   });
 
-  let n1 = await OlderC.createNode({num: 12960});
-  let n2 = await KeyC.createNode({key: "xpub6BoPBGjkVAcue1y571JydPTaQ5iLfERUDxgao7ZRLiB2LDvvezCcsZymMJTfXWqRkGpeBNReNyNjEUN9HzTeX8mzbzvyzmsBWHkgwbZhGny/0/*"});
-  let n3 = await KeyC.createNode({key: "020202020202020202020202020202020202020202020202020202020202020202"});
-  let thresh = await ThreshC.createNode({thresh: 2});
-  let desc = await DescC.createNode();
-  let addr = await AddressC.createNode({idx: 0});
+  if(window.location.hash.startsWith("#/full/")){
+    try{
+      let o = fromBase64(window.location.hash.substr("#/full/".length))
+      await editor.fromJSON(o);
+    }catch(e){
+      console.error(`Error: ${e}`)
+    }
+  }else{
+    let n1 = await OlderC.createNode({num: 12960});
+    let n2 = await KeyC.createNode({key: "xpub6BoPBGjkVAcue1y571JydPTaQ5iLfERUDxgao7ZRLiB2LDvvezCcsZymMJTfXWqRkGpeBNReNyNjEUN9HzTeX8mzbzvyzmsBWHkgwbZhGny/0/*"});
+    let n3 = await KeyC.createNode({key: "020202020202020202020202020202020202020202020202020202020202020202"});
+    let thresh = await ThreshC.createNode({thresh: 2, num_inputs: 4});
+    let desc = await DescC.createNode();
+    let addr = await AddressC.createNode({idx: 0});
 
-  n1.position = [80, 200];
-  n2.position = [80, 400];
-  n3.position = [80, 570];
-  thresh.position = [500, 240];
-  desc.position = [800, 240];
-  addr.position = [1100, 240];
+    n1.position = [80, 200];
+    n2.position = [80, 400];
+    n3.position = [80, 570];
+    thresh.position = [500, 240];
+    desc.position = [800, 240];
+    addr.position = [1100, 240];
 
-  editor.addNode(n1);
-  editor.addNode(n2);
-  editor.addNode(n3);
-  editor.addNode(thresh);
-  editor.addNode(desc);
-  editor.addNode(addr);
+    editor.addNode(n1);
+    editor.addNode(n2);
+    editor.addNode(n3);
+    editor.addNode(thresh);
+    editor.addNode(desc);
+    editor.addNode(addr);
 
-  editor.connect(n1.outputs.get('pol'), thresh.inputs.get('pol1'));
-  editor.connect(thresh.outputs.get('pol'), desc.inputs.get('pol'));
+    editor.connect(n1.outputs.get('pol'), thresh.inputs.get('pol1'));
+    editor.connect(thresh.outputs.get('pol'), desc.inputs.get('pol'));
+    editor.connect(n2.outputs.get('key'), thresh.inputs.get('pol2'));
+    editor.connect(n3.outputs.get('key'), thresh.inputs.get('pol3'));
+    editor.connect(desc.outputs.get('desc'), addr.inputs.get('desc'));
+  }
 
   editor.on('process nodecreated noderemoved connectioncreated connectionremoved', async () => {
-    console.log('process');
+    let obj = editor.toJSON();
+    let h = toBase64(obj);
+    window.location.hash = "/full/"+h;
     await engine.abort();
-    await engine.process(editor.toJSON());
+    await engine.process(obj);
+  });
+
+  editor.on('nodetranslated nodetranslated', async () => {
+    let obj = editor.toJSON();
+    let h = toBase64(obj);
+    window.location.hash = "/full/"+h;
   });
 
   editor.view.resize();
   AreaPlugin.zoomAt(editor);
-  editor.trigger('process');
-
-  await sleep(100);
-  editor.connect(n2.outputs.get('key'), thresh.inputs.get('pol2'));
-  editor.trigger('process');
-
-  await sleep(100);
-  editor.connect(n3.outputs.get('key'), thresh.inputs.get('pol3'));
-  editor.connect(desc.outputs.get('desc'), addr.inputs.get('desc'));
   editor.trigger('process');
 
 };
