@@ -11,6 +11,7 @@ function sleep(ms) {
 
 /*************************** TEMPLATES *************************/
 
+// TODO: lots of copy-paste, figure out how to simplify
 var VueNumControl = {
   props: ['readonly', 'emitter', 'ikey', 'getData', 'putData'],
   template: `<input type="number" min="0" step="1" :readonly="readonly" :value="value" @input="change($event)" @dblclick.stop="" @pointerdown.stop="" @pointermove.stop=""/>`,
@@ -32,6 +33,37 @@ var VueNumControl = {
   },
   mounted() {
     this.value = this.getData(this.ikey);
+  }
+}
+
+// TODO: ugly, make label dynamic and styled in css
+var VueRatioControl = {
+  props: ['readonly', 'emitter', 'ikey', 'getData', 'putData'],
+  template: `<div height="20px"><small style="display:block;padding-bottom:2px">Probability ratio:</small><input type="number" min="0.01" max="100" step="any" :readonly="readonly" :value="value" @change="change($event)" @keyup.enter="change($event)" @dblclick.stop="" @pointerdown.stop="" @pointermove.stop=""/></div>`,
+  data() {
+    return {
+      value: 1,
+    }
+  },
+  methods: {
+    change(e){
+      this.value = +e.target.value;
+      if(this.value <= 0){
+        this.value = 1;
+      }
+      this.update();
+    },
+    update() {
+      if (this.ikey)
+        this.putData(this.ikey, this.value)
+      this.emitter.trigger('process');
+    }
+  },
+  mounted() {
+    this.value = this.getData(this.ikey);
+    if(this.value <= 0){
+      this.value = 1;
+    }
   }
 }
 
@@ -85,11 +117,25 @@ var VuePreviewControl = {
 
 /*************************** CONTROLS *************************/
 
+// TODO: lots of copy-paste, figure out how to simplify
 class NumControl extends Rete.Control {
 
   constructor(emitter, key, readonly) {
     super(key);
     this.component = VueNumControl;
+    this.props = { emitter, ikey: key, readonly };
+  }
+
+  setValue(val) {
+    this.vueContext.value = val;
+  }
+}
+
+class RatioControl extends Rete.Control {
+
+  constructor(emitter, key, readonly) {
+    super(key);
+    this.component = VueRatioControl;
     this.props = { emitter, ikey: key, readonly };
   }
 
@@ -190,14 +236,33 @@ class OrComponent extends Rete.Component {
         .addInput(inp1)
         .addInput(inp2)
         .addControl(new PreviewControl(this.editor, 'preview', true))
+        .addControl(new RatioControl(this.editor, "ratio"))
         .addOutput(out);
   }
 
   worker(node, inputs, outputs) {
+    var ratio = (node.data.ratio) ? node.data.ratio : 1;
+    let r1 = Math.round(ratio*100);
+    let r2 = 100;
+    // mutual reduce
+    while(r1%10 == 0 && r2%10 == 0){
+      r1 = Math.round(r1/10);
+      r2 = Math.round(r2/10);
+    }
     var p1 = inputs['pol1'].length?inputs['pol1'][0]:node.data.pol1;
     var p2 = inputs['pol2'].length?inputs['pol2'][0]:node.data.pol2;
-
-    var pol = `or(${p1 ? p1 : ''},${p2 ? p2 : ''})`;
+    // handle undefined
+    p1 = (p1) ? p1 : '';
+    p2 = (p2) ? p2 : '';
+    if(r1 != r2){
+      if(r1 != 1){
+        p1 = `${r1}@${p1}`;
+      }
+      if(r2 != 1){
+        p2 = `${r2}@${p2}`;
+      }
+    }
+    var pol = `or(${p1},${p2})`;
     this.editor.nodes.find(n => n.id == node.id).controls.get('preview').setValue(pol);
     outputs['pol'] = pol;
   }
@@ -222,6 +287,32 @@ class TimeComponent extends Rete.Component {
   worker(node, inputs, outputs) {
     var n = node.data.num;
     n = (n==undefined) ? 0 : n;
+    var pol = `${this._op}(${n})`;
+
+    this.editor.nodes.find(n => n.id == node.id).controls.get('preview').setValue(pol);
+    outputs['pol'] = pol;
+  }
+}
+
+class HashComponent extends Rete.Component {
+  constructor(name="SHA256"){
+    super(name);
+    this._op = name.toLowerCase();
+  }
+
+  builder(node) {
+    // var inp = new Rete.Input('num',"Number", numSocket);
+    var out = new Rete.Output('pol', "Policy", policySocket);
+
+    return node
+        .addControl(new PreviewControl(this.editor, 'preview', true))
+        .addControl(new StringControl(this.editor, 'hash'))
+        .addOutput(out);
+  }
+
+  worker(node, inputs, outputs) {
+    var n = node.data.hash;
+    n = (n==undefined) ? '' : n;
     var pol = `${this._op}(${n})`;
 
     this.editor.nodes.find(n => n.id == node.id).controls.get('preview').setValue(pol);
@@ -364,8 +455,23 @@ async function app_init(){
   let OrC = new OrComponent();
   let DescC = new DescriptorComponent();
   let AddressC = new AddressComponent();
+  let Sha256_C = new HashComponent("SHA256");
+  let Ripemd160_C = new HashComponent("Ripemd160");
+  let Hash256_C = new HashComponent("Hash256");
+  let Hash160_C = new HashComponent("Hash160");
   var components = [
-    KeyC, AfterC, OlderC, ThreshC, AndC, OrC, DescC, AddressC
+    KeyC,
+    AfterC,
+    OlderC,
+    ThreshC,
+    AndC,
+    OrC,
+    DescC,
+    AddressC,
+    Sha256_C,
+    Ripemd160_C,
+    Hash256_C,
+    Hash160_C,
   ];
 
   window.editor = new Rete.NodeEditor('demo@0.1.0', container);
@@ -397,7 +503,7 @@ async function app_init(){
     let n1 = await OlderC.createNode({num: 12960});
     let n2 = await KeyC.createNode({key: "xpub6BoPBGjkVAcue1y571JydPTaQ5iLfERUDxgao7ZRLiB2LDvvezCcsZymMJTfXWqRkGpeBNReNyNjEUN9HzTeX8mzbzvyzmsBWHkgwbZhGny/0/*"});
     let n3 = await KeyC.createNode({key: "020202020202020202020202020202020202020202020202020202020202020202"});
-    let thresh = await ThreshC.createNode({thresh: 2, num_inputs: 4});
+    let thresh = await ThreshC.createNode({thresh: 2});
     let desc = await DescC.createNode();
     let addr = await AddressC.createNode({idx: 0});
 
