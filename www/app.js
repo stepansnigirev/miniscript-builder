@@ -235,21 +235,10 @@ class ThreshComponent extends Rete.Component {
   }
 
   builder(node) {
-    let num_ins = 2;
-    if(node.data.thresh){
-      num_ins = (num_ins < (node.data.thresh+1)) ? (node.data.thresh+1) : num_ins;
-    }
-    if(node.data.num_inputs){
-      num_ins = (num_ins < node.data.num_inputs) ? node.data.num_inputs : num_ins;
-    }
-    for(let i=1; i<=num_ins; i++){
-      let pol = new Rete.Input(`pol${i}`, "Policy", policySocket);
-      pol.addControl(new StringControl(this.editor, `pol${i}`));
-      node.addInput(pol);
-    }
+    let pol = new Rete.Input(`policies`, "Policies", policySocket, true);
+    node.addInput(pol);
 
     var out = new Rete.Output('pol', "Policy", policySocket);
-
 
     return node
         .addControl(new PreviewControl(this.editor, 'preview', true))
@@ -261,48 +250,11 @@ class ThreshComponent extends Rete.Component {
     let n = node.data.thresh;
     n = (n==undefined) ? 1 : n;
     let nodeobj = this.editor.nodes.find(n => n.id == node.id);
-    // add missing sockets
-    for(let i=1; i<=n+1; i++){
-      if(inputs[`pol${i}`] == undefined){
-        let inp = new Rete.Input(`pol${i}`, "Policy", policySocket);
-        inp.addControl(new StringControl(this.editor, `pol${i}`));
-        nodeobj.addInput(inp);
-      }
-    }
-    // remove empty sockets at the end, keep only one
-    for(let i = nodeobj.inputs.size+1; i > n; i--){
-      let k = `pol${i}`;
-      let inp = nodeobj.inputs.get(k);
-      if(inp){
-        // don't delete if it's connected or has value
-        let pol = (inputs[k] && inputs[k].length) ? inputs[k][0]:node.data[k];
-        if(pol){
-          // last is connected - we actually need to add one
-          if(i == nodeobj.inputs.size){
-            if(inputs[`pol${i+1}`] == undefined){
-              let newinp = new Rete.Input(`pol${i+1}`, "Policy", policySocket);
-              newinp.addControl(new StringControl(this.editor, `pol${i+1}`));
-              nodeobj.addInput(newinp);
-            }
-          }
-          break;
-        }
-        // delete otherwise
-        let inp = nodeobj.inputs.get(`pol${i+1}`);
-        if(inp){
-          nodeobj.removeInput(inp);
-        }
-      }
-    }
     let args = "";
-    let m = nodeobj.inputs.size+1;
-    for(let i = 1; i<= m; i++){
-      let k = `pol${i}`;
-      let pol = (inputs[k] && inputs[k].length) ? inputs[k][0]:node.data[k];
-      if(pol){
-        args += `,${pol}`;
-      }
-    }
+    // sort alphabetically, bad but at least deterministic
+    inputs['policies'].sort().forEach((inpol)=>{
+      args += `,${inpol}`
+    })
     let pol = `thresh(${n}${args})`;
     nodeobj.controls.get('preview').setValue(pol);
     outputs['pol'] = pol;
@@ -395,6 +347,13 @@ async function loadHash(){
 
 /*************************** APP MAIN *************************/
 
+function displayOut(node){
+    let d = engine.data.nodes[node.id].outputData;
+    let res = Object.values(d)[0];
+    document.getElementById("node-name").innerText = node.name;
+    document.getElementById("node-output").innerText = res;
+}
+
 async function app_init(){
   var container = document.querySelector('#rete');
   let AndC = new AndComponent();
@@ -425,7 +384,7 @@ async function app_init(){
   // });
   editor.use(ConnectionMasteryPlugin.default);
 
-  let engine = new Rete.Engine('demo@0.1.0');
+  window.engine = new Rete.Engine('demo@0.1.0');
 
   components.map(c => {
     editor.register(c);
@@ -456,10 +415,10 @@ async function app_init(){
     editor.addNode(desc);
     editor.addNode(addr);
 
-    editor.connect(n1.outputs.get('pol'), thresh.inputs.get('pol1'));
+    editor.connect(n1.outputs.get('pol'), thresh.inputs.get('policies'));
     editor.connect(thresh.outputs.get('pol'), desc.inputs.get('pol'));
-    editor.connect(n2.outputs.get('key'), thresh.inputs.get('pol2'));
-    editor.connect(n3.outputs.get('key'), thresh.inputs.get('pol3'));
+    editor.connect(n2.outputs.get('key'), thresh.inputs.get('policies'));
+    editor.connect(n3.outputs.get('key'), thresh.inputs.get('policies'));
     editor.connect(desc.outputs.get('desc'), addr.inputs.get('desc'));
 
     editor.view.resize();
@@ -472,6 +431,9 @@ async function app_init(){
     window.location.hash = "/full/"+h;
     await engine.abort();
     await engine.process(obj);
+    if(editor.selected.list.length){
+      displayOut(editor.selected.list[0]);
+    }
   });
 
   editor.on('nodetranslated', async () => {
@@ -481,11 +443,7 @@ async function app_init(){
   });
 
   editor.on('nodeselected', async (node) => {
-    // let nodeobj = this.editor.nodes.find(n => n.id == node.id);
-    let d = engine.data.nodes[node.id].outputData;
-    let res = Object.values(d)[0];
-    document.getElementById("node-name").innerText = node.name;
-    document.getElementById("node-output").innerText = res;
+    displayOut(editor.selected.list[0]);
   });
 
   editor.trigger('process');

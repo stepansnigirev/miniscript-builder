@@ -12,9 +12,9 @@ Try online: [miniscript.fun](https://miniscript.fun)
 
 Planned:
 
-- [x] automatic url encoding of full editor state (`#/full/b64-encoded-json`)
 - [x] most miniscript op-codes
 - [x] address derivation
+- [x] automatic url encoding of full editor state (`#/full/b64-encoded-json`)
 - [x] node inspector with node output
 - [ ] sha256, ripemd160, hash160, hash256 nodes
 - [ ] network selector (bitcoin / testnet / regtest / signet)
