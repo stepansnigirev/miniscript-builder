@@ -7,7 +7,7 @@
   <link rel="stylesheet" type="text/css" href="./www/style.css">
 </head>
 <body>
-<div id="rete" class="editor"></div>
+  <div id="rete" class="editor"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/rete@1.4.5/build/rete.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.14/vue.min.js"></script>
@@ -20,20 +20,23 @@
 <script src="https://cdn.jsdelivr.net/npm/rete-comment-plugin@0.3.0/build/comment-plugin.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/rete-history-plugin@0.1.0/build/history-plugin.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/rete-connection-mastery-plugin@0.1.0/build/connection-mastery-plugin.min.js"></script>
+<script src="./www/app.js"></script>
 
 <script type="module">
-import init, { compile } from './rust/pkg/compiler.js';
+import init, { compile, address } from './rust/pkg/compiler.js';
 
-async function run() {
-  await init();
-  window.miniscript_compile = compile;
+window.miniscript = {
+  init,
+  compile,
+  address,
 }
-
-run();
-
+async function main(){
+  await miniscript.init();
+  await app_init();
+};
+main();
 </script>
 
-<script src="./www/app.js"></script>
 
 </body>
 </html>

@@ -1,10 +1,19 @@
 var numSocket = new Rete.Socket('Number');
 var policySocket = new Rete.Socket('Policy');
 var keySocket = new Rete.Socket('Key');
+var descriptorSocket = new Rete.Socket('Descriptor');
+var stringSocket = new Rete.Socket('String');
+
+// helper function
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/*************************** TEMPLATES *************************/
 
 var VueNumControl = {
   props: ['readonly', 'emitter', 'ikey', 'getData', 'putData'],
-  template: `<input type="number" min="1" step="1" :readonly="readonly" :value="value" @input="change($event)" @dblclick.stop="" @pointerdown.stop="" @pointermove.stop=""/>`,
+  template: `<input type="number" min="0" step="1" :readonly="readonly" :value="value" @input="change($event)" @dblclick.stop="" @pointerdown.stop="" @pointermove.stop=""/>`,
   data() {
     return {
       value: 1,
@@ -74,6 +83,8 @@ var VuePreviewControl = {
   }
 }
 
+/*************************** CONTROLS *************************/
+
 class NumControl extends Rete.Control {
 
   constructor(emitter, key, readonly) {
@@ -113,22 +124,7 @@ class PreviewControl extends Rete.Control {
   }
 }
 
-class NumComponent extends Rete.Component {
-
-  constructor(){
-    super("Number");
-  }
-
-  builder(node) {
-    var out1 = new Rete.Output('num', "Number", numSocket);
-
-    return node.addControl(new NumControl(this.editor, 'num')).addOutput(out1);
-  }
-
-  worker(node, inputs, outputs) {
-    outputs['num'] = node.data.num;
-  }
-}
+/*************************** POLICY COMPONENTS *************************/
 
 class KeyComponent extends Rete.Component {
 
@@ -294,7 +290,7 @@ class ThreshComponent extends Rete.Component {
       let k = `pol${i}`;
       let pol = (inputs[k] && inputs[k].length) ? inputs[k][0]:node.data[k];
       if(pol){
-        args += `, ${pol}`;
+        args += `,${pol}`;
       }
     }
     let pol = `thresh(${n}${args})`;
@@ -304,7 +300,73 @@ class ThreshComponent extends Rete.Component {
   }
 }
 
-(async () => {
+/*************************** DESCRIPTOR *************************/
+
+class DescriptorComponent extends Rete.Component {
+  constructor(){
+    super("Descriptor");
+  }
+
+  builder(node) {
+    var inp = new Rete.Input('pol',"Policy", policySocket);
+    var out = new Rete.Output('desc', "Descriptor", descriptorSocket);
+
+    inp.addControl(new StringControl(this.editor, 'pol'))
+
+    return node
+        .addInput(inp)
+        .addControl(new PreviewControl(this.editor, 'preview', true))
+        .addOutput(out);
+  }
+
+  worker(node, inputs, outputs) {
+    let pol = inputs['pol'].length ? inputs['pol'][0] : node.data.pol;
+    let desc = '';
+    try{
+      desc = miniscript.compile(pol);
+    }catch(e){
+      desc = `Error: ${e}`;
+    }
+    this.editor.nodes.find(n => n.id == node.id).controls.get('preview').setValue(desc);
+    outputs['desc'] = desc;
+  }
+}
+
+class AddressComponent extends Rete.Component {
+  constructor(){
+    super("Address");
+  }
+
+  builder(node) {
+    var inp = new Rete.Input('desc',"Descriptor", descriptorSocket);
+    var out = new Rete.Output('addr', "Address", stringSocket);
+
+    inp.addControl(new StringControl(this.editor, 'desc'))
+
+    return node
+        .addInput(inp)
+        .addControl(new PreviewControl(this.editor, 'preview', true))
+        .addControl(new NumControl(this.editor, 'idx'))
+        .addOutput(out);
+  }
+
+  worker(node, inputs, outputs) {
+    let desc = inputs['desc'].length ? inputs['desc'][0] : node.data.desc;
+    let idx = node.data.idx;
+    let addr = '';
+    try{
+      addr = miniscript.address(desc, idx);
+    }catch(e){
+      addr = `Error: ${e}`;
+    }
+    this.editor.nodes.find(n => n.id == node.id).controls.get('preview').setValue(addr);
+    outputs['addr'] = addr;
+  }
+}
+
+/*************************** APP MAIN *************************/
+
+async function app_init(){
   var container = document.querySelector('#rete');
   let AndC = new AndComponent();
   let AfterC = new TimeComponent("After");
@@ -312,11 +374,13 @@ class ThreshComponent extends Rete.Component {
   let ThreshC = new ThreshComponent();
   let KeyC = new KeyComponent();
   let OrC = new OrComponent();
+  let DescC = new DescriptorComponent();
+  let AddressC = new AddressComponent();
   var components = [
-    KeyC, AfterC, OlderC, ThreshC, AndC, OrC
+    KeyC, AfterC, OlderC, ThreshC, AndC, OrC, DescC, AddressC
   ];
 
-  var editor = new Rete.NodeEditor('demo@0.1.0', container);
+  let editor = new Rete.NodeEditor('demo@0.1.0', container);
   editor.use(ConnectionPlugin.default);
   editor.use(VueRenderPlugin.default);    
   editor.use(ContextMenuPlugin.default, {
@@ -334,24 +398,29 @@ class ThreshComponent extends Rete.Component {
     engine.register(c);
   });
 
-  var n1 = await OlderC.createNode({num: 12960});
-  var n2 = await KeyC.createNode({key: "xpub6BoPBGjkVAcue1y571JydPTaQ5iLfERUDxgao7ZRLiB2LDvvezCcsZymMJTfXWqRkGpeBNReNyNjEUN9HzTeX8mzbzvyzmsBWHkgwbZhGny"});
-  var n3 = await KeyC.createNode({key: "key B"});
-  var thresh = await ThreshC.createNode({thresh: 2});
+  let n1 = await OlderC.createNode({num: 12960});
+  let n2 = await KeyC.createNode({key: "xpub6BoPBGjkVAcue1y571JydPTaQ5iLfERUDxgao7ZRLiB2LDvvezCcsZymMJTfXWqRkGpeBNReNyNjEUN9HzTeX8mzbzvyzmsBWHkgwbZhGny/0/*"});
+  let n3 = await KeyC.createNode({key: "020202020202020202020202020202020202020202020202020202020202020202"});
+  let thresh = await ThreshC.createNode({thresh: 2});
+  let desc = await DescC.createNode();
+  let addr = await AddressC.createNode({idx: 0});
 
   n1.position = [80, 200];
   n2.position = [80, 400];
   n3.position = [80, 570];
   thresh.position = [500, 240];
+  desc.position = [800, 240];
+  addr.position = [1100, 240];
 
   editor.addNode(n1);
   editor.addNode(n2);
   editor.addNode(n3);
   editor.addNode(thresh);
+  editor.addNode(desc);
+  editor.addNode(addr);
 
   editor.connect(n1.outputs.get('pol'), thresh.inputs.get('pol1'));
-  // editor.connect(n2.outputs.get('pol'), thresh.inputs.get('pol2'));
-
+  editor.connect(thresh.outputs.get('pol'), desc.inputs.get('pol'));
 
   editor.on('process nodecreated noderemoved connectioncreated connectionremoved', async () => {
     console.log('process');
@@ -362,4 +431,14 @@ class ThreshComponent extends Rete.Component {
   editor.view.resize();
   AreaPlugin.zoomAt(editor);
   editor.trigger('process');
-})();
+
+  await sleep(100);
+  editor.connect(n2.outputs.get('key'), thresh.inputs.get('pol2'));
+  editor.trigger('process');
+
+  await sleep(100);
+  editor.connect(n3.outputs.get('key'), thresh.inputs.get('pol3'));
+  editor.connect(desc.outputs.get('desc'), addr.inputs.get('desc'));
+  editor.trigger('process');
+
+};
