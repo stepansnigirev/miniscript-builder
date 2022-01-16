@@ -2,8 +2,13 @@ use wasm_bindgen::prelude::*;
 use std::str::FromStr;
 
 use miniscript::bitcoin::{self, secp256k1};
+use miniscript::bitcoin::util::bip32::{
+    ExtendedPrivKey, ExtendedPubKey, DerivationPath
+};
 use miniscript::policy::Concrete;
 use miniscript::{Descriptor, DescriptorPublicKey, TranslatePk2, DescriptorTrait};
+
+use bip39::Mnemonic;
 
 // https://github.com/rustwasm/wasm-bindgen/issues/1742#issuecomment-643793491
 macro_rules! jserr {
@@ -34,4 +39,35 @@ pub fn address(desc: &str, idx: u32) -> Result<JsValue, JsValue>{
     let desc = jserr!(desc.derive(idx).translate_pk2(|xpk| xpk.derive_public_key(&secp_ctx).map(bitcoin::PublicKey::new)));
     let addr = jserr!(desc.address(bitcoin::Network::Bitcoin));
     Ok(addr.to_string().into())
+}
+
+#[wasm_bindgen]
+pub fn bip39_root(mnemonic: &str, password: &str) -> Result<JsValue, JsValue> {
+    let mnemonic = jserr!(Mnemonic::parse(mnemonic));
+    let seed = mnemonic.to_seed(password);
+
+    // generate root bip-32 key from seed
+    let root = jserr!(ExtendedPrivKey::new_master(bitcoin::Network::Bitcoin, &seed));
+
+    let secp_ctx = secp256k1::Secp256k1::new();
+    let fingerprint = root.fingerprint(&secp_ctx);
+    Ok(format!("[{}]{}", fingerprint, root).into())
+}
+
+#[wasm_bindgen]
+pub fn bip39_derive(mnemonic: &str, password: &str, path: &str) -> Result<JsValue, JsValue> {
+    let mnemonic = jserr!(Mnemonic::parse(mnemonic));
+    let seed = mnemonic.to_seed(password);
+    let derivation = jserr!(DerivationPath::from_str(path));
+
+    // generate root bip-32 key from seed
+    let secp_ctx = secp256k1::Secp256k1::new();
+    let root = jserr!(ExtendedPrivKey::new_master(bitcoin::Network::Bitcoin, &seed));
+    let fingerprint = root.fingerprint(&secp_ctx);
+
+    let child = jserr!(root.derive_priv(&secp_ctx, &derivation));
+    let xpub = ExtendedPubKey::from_priv(&secp_ctx, &child);
+    let key = format!("[{}{}]{}", fingerprint, &path[1..], xpub);
+
+    Ok(key.into())
 }

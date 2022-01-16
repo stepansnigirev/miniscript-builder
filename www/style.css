@@ -91,19 +91,28 @@ select, input {
 */
 .editor .socket.output.policy,
 .editor .socket.input.policy{
-  /*width: 15px;*/
-  /*height: 15px;*/
   background: #4A90E2;
   border: 2px solid #4A90E2;
 }
-/*.editor .socket.output.policy{
-  margin-right: -7px;
+
+.editor .socket.output.key,
+.editor .socket.input.key{
+  background: #FF9A00;
+  border: 2px solid #FF9A00;
 }
-.editor .socket.input.policy{
-  margin-left: -7px;
+
+.editor .socket.output.descriptor,
+.editor .socket.input.descriptor{
+  background: #BD10E0;
+  border: 2px solid #BD10E0;
 }
-*/
-.editor .socket.output.policy:hover{
+
+.editor .socket.output.policy:hover,
+.editor .socket.input.policy:hover,
+.editor .socket.output.descriptor:hover,
+.editor .socket.input.descriptor:hover,
+.editor .socket.output.key:hover,
+.editor .socket.input.key:hover{
   border: 2px solid rgba(255,255,255,0.5);
 }
 

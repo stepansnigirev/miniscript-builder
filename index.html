@@ -29,12 +29,14 @@
 <script src="./www/app.js"></script>
 
 <script type="module">
-import init, { compile, address } from './rust/pkg/compiler.js';
+import init, { compile, address, bip39_root, bip39_derive } from './rust/pkg/compiler.js';
 
 window.miniscript = {
   init,
   compile,
   address,
+  bip39_root,
+  bip39_derive,
 }
 async function main(){
   await miniscript.init();

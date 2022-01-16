@@ -69,7 +69,7 @@ var VueRatioControl = {
 
 var VueStringControl = {
   props: ['readonly', 'emitter', 'ikey', 'getData', 'putData'],
-  template: `<input type="text" :readonly="readonly" :value="value" @input="change($event)" @dblclick.stop="" @pointerdown.stop="" @pointermove.stop=""/>`,
+  template: `<input type="text" :readonly="readonly" :value="value" @change="change($event)" @keyup.enter="change($event)" @dblclick.stop="" @pointerdown.stop="" @pointermove.stop=""/>`,
   data() {
     return {
       value: "",
@@ -172,6 +172,38 @@ class PreviewControl extends Rete.Control {
 
 /*************************** POLICY COMPONENTS *************************/
 
+class BIP39Component extends Rete.Component {
+
+  constructor(){
+    super("BIP39");
+  }
+
+  builder(node) {
+    var out = new Rete.Output('key', "Key", keySocket);
+    return node
+            .addControl(new PreviewControl(this.editor, 'preview', true))
+            .addControl(new StringControl(this.editor, 'mnemonic'))
+            .addControl(new StringControl(this.editor, 'password'))
+            .addControl(new StringControl(this.editor, 'derivation'))
+            .addOutput(out);
+  }
+
+  worker(node, inputs, outputs) {
+    let out = '';
+    try{
+      let mnemonic = (node.data.mnemonic) ? node.data.mnemonic : '';
+      let password = (node.data.password) ? node.data.password : '';
+      let derivation = (node.data.derivation) ? node.data.derivation : 'm';
+      out = miniscript.bip39_derive(mnemonic, password, derivation) + "/0/*";
+    }catch (e){
+      out = `${e}`;
+      console.error(e);
+    }
+    this.editor.nodes.find(n => n.id == node.id).controls.get('preview').setValue(out);
+    outputs['key'] = out;
+  }
+}
+
 class KeyComponent extends Rete.Component {
 
   constructor(){
@@ -180,11 +212,20 @@ class KeyComponent extends Rete.Component {
 
   builder(node) {
     var out = new Rete.Output('key', "Policy", policySocket);
-    return node.addControl(new StringControl(this.editor, 'key')).addOutput(out);
+    var inp = new Rete.Input("key", "Key", keySocket);
+    inp.addControl(new StringControl(this.editor, 'key'));
+    return node
+              .addControl(new PreviewControl(this.editor, 'preview', true))
+              .addInput(inp)
+              .addOutput(out);
   }
 
   worker(node, inputs, outputs) {
-    outputs['key'] = `pk(${node.data.key ? node.data.key : ''})`;
+    let k = inputs['key'].length ? inputs['key'][0] : node.data.key;
+    k = k ? k : '';
+    let val = `pk(${k})`;
+    this.editor.nodes.find(n => n.id == node.id).controls.get('preview').setValue(val);
+    outputs['key'] = val;
   }
 }
 
@@ -439,10 +480,14 @@ async function loadHash(){
 /*************************** APP MAIN *************************/
 
 function displayOut(node){
+  try{
     let d = engine.data.nodes[node.id].outputData;
     let res = Object.values(d)[0];
     document.getElementById("node-name").innerText = node.name;
     document.getElementById("node-output").innerText = res;
+  }catch(e){
+    console.error(e);
+  }
 }
 
 async function app_init(){
@@ -459,7 +504,9 @@ async function app_init(){
   let Ripemd160_C = new HashComponent("Ripemd160");
   let Hash256_C = new HashComponent("Hash256");
   let Hash160_C = new HashComponent("Hash160");
+  let BIP39_C = new BIP39Component();
   var components = [
+    BIP39_C,
     KeyC,
     AfterC,
     OlderC,
