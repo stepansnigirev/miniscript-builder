@@ -425,7 +425,7 @@ async function app_init(){
   // });
   editor.use(ConnectionMasteryPlugin.default);
 
-  var engine = new Rete.Engine('demo@0.1.0');
+  let engine = new Rete.Engine('demo@0.1.0');
 
   components.map(c => {
     editor.register(c);
@@ -474,10 +474,18 @@ async function app_init(){
     await engine.process(obj);
   });
 
-  editor.on('nodetranslated nodetranslated', async () => {
+  editor.on('nodetranslated', async () => {
     let obj = editor.toJSON();
     let h = toBase64(obj);
     window.location.hash = "/full/"+h;
+  });
+
+  editor.on('nodeselected', async (node) => {
+    // let nodeobj = this.editor.nodes.find(n => n.id == node.id);
+    let d = engine.data.nodes[node.id].outputData;
+    let res = Object.values(d)[0];
+    document.getElementById("node-name").innerText = node.name;
+    document.getElementById("node-output").innerText = res;
   });
 
   editor.trigger('process');
