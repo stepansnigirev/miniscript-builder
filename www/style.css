@@ -11,6 +11,10 @@ body{
   flex-direction: column;
   align-items: center;
 }
+.footer{
+  display: flex;
+  flex-direction: row;
+}
 .github-corner{
   position: absolute;
   right: 0;
@@ -29,23 +33,37 @@ body{
   background-color: rgba(255,255,255,0.1);
   color: #fff;
 }
-#inspector{
+.footer .menu{
   background: #202A40;
-  max-width: 90%;
-  width: 550px;
   border-radius: 10px;
   margin-bottom: 20px;
   display: flex;
   flex-direction: column;
+  margin-left: 10px;
+  margin-right: 10px;
+  text-align: center;
 }
-#inspector .title{
+#inspector{
+  max-width: 90%;
+  width: 550px;
+}
+.btn{
+  padding: 10px;
+  background: #0E1927;
+  border-radius: 5px;
+  margin: 5px 10px;
+  text-decoration: none;
+  color: #fff;
+  cursor: pointer;
+}
+.footer .menu .title{
   text-align: center;
   background: rgba(0,0,0,0.15);
-  padding: 5px;
+  padding: 5px 20px;
   font-size:  16px;
   font-weight: bold;
 }
-#inspector textarea{
+.footer .menu textarea{
   background: rgba(0,0,0,0.15);
   border: 1px solid transparent;
   margin: 10px;

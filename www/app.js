@@ -468,35 +468,76 @@ function toBase64(obj){
 
 function fromBase64(b64){
   let obj = JSON.parse(atob(b64.replace(/_/g, '/').replace(/-/g, '+')));
-  // ugly hack: get network from obj
-  let net = obj.network;
-  if(net != undefined){
-    document.getElementById("network").value = net;
-    network = net;
-  }
   return obj;
 }
 
-async function loadHash(){
-  try{
-    let o = fromBase64(window.location.hash.substr("#/full/".length))
-    await editor.fromJSON(o);
+async function loadObj(obj){
+    // get network from obj
+    let net = obj.network;
+    if(net != undefined){
+      document.getElementById("network").value = net;
+      network = net;
+    }
+    await editor.fromJSON(obj);
     editor.view.resize();
     AreaPlugin.zoomAt(editor);
+    editor.trigger("process");
+    await sleep(300);
+    editor.trigger("process");
     // select descriptor by default
     let d = editor.nodes.find(n => n.name == "Descriptor");
     if(d){
       editor.selectNode(d);
     }
+}
+
+async function loadHash(){
+  try{
+    let obj = {};
+    if(window.location.hash.startsWith("#/full/")){
+      obj = fromBase64(window.location.hash.substr("#/full/".length))
+    }else if(window.location.hash.startsWith("#/url/")){
+      let url = window.location.hash.substr("#/url/".length);
+      let res = await fetch(url);
+      obj = await res.json();
+    }else{
+      throw "Can't parse hash";
+    }
+    await loadObj(obj);
   }catch(e){
     console.error(`Error: ${e}`)
   }
 }
 
+function exportJSON(el){
+  let obj = editor.toJSON();
+  let data = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(obj));
+
+  el.setAttribute("href", "data:"+data);
+  el.setAttribute("download", "data.json");
+}
+document.getElementById("jsonfile").addEventListener("change", async (e) => {
+  files = e.currentTarget.files;
+  for(let i=0; i<1; i++){
+    let reader = new FileReader();
+    reader.onload = async function(e) {
+      let obj = JSON.parse(reader.result)
+      await loadObj(obj);
+    }
+    reader.readAsText(files[i]);
+  }
+});
+
 /*************************** APP MAIN *************************/
 
 function displayOut(node){
+  if(!node || !engine){
+    return;
+  }
   try{
+    if(!engine.data){
+      return;
+    }
     let d = engine.data.nodes[node.id].outputData;
     let res = Object.values(d)[0];
     document.getElementById("node-name").innerText = node.name;
@@ -565,7 +606,7 @@ async function app_init(){
     engine.register(c);
   });
 
-  if(window.location.hash.startsWith("#/full/")){
+  if(window.location.hash.length > 5){
     await loadHash();
   }else{
     let p1 = await OlderC.createNode({num: 12960});

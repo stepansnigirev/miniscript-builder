@@ -1,0 +1,252 @@
+{
+  "network": "bitcoin",
+  "id": "demo@0.1.0",
+  "nodes": {
+    "2": {
+      "id": 2,
+      "data": {
+        "mnemonic": "crash fatal hollow thank swallow submit tattoo portion code foam math force",
+        "password": "qwe",
+        "derivation": "m/48h/0h/0h/2h"
+      },
+      "inputs": {},
+      "outputs": {
+        "key": {
+          "connections": [
+            {
+              "node": 3,
+              "input": "key",
+              "data": {}
+            }
+          ]
+        }
+      },
+      "position": [
+        -152.8076377700496,
+        -17.469585946171378
+      ],
+      "name": "BIP39"
+    },
+    "3": {
+      "id": 3,
+      "data": {},
+      "inputs": {
+        "key": {
+          "connections": [
+            {
+              "node": 2,
+              "output": "key",
+              "data": {}
+            }
+          ]
+        }
+      },
+      "outputs": {
+        "key": {
+          "connections": [
+            {
+              "node": 11,
+              "input": "pol1",
+              "data": {}
+            }
+          ]
+        }
+      },
+      "position": [
+        122.914765186986,
+        5.616892819342844
+      ],
+      "name": "Key"
+    },
+    "6": {
+      "id": 6,
+      "data": {},
+      "inputs": {
+        "pol": {
+          "connections": [
+            {
+              "node": 11,
+              "output": "pol",
+              "data": {}
+            }
+          ]
+        }
+      },
+      "outputs": {
+        "desc": {
+          "connections": [
+            {
+              "node": 7,
+              "input": "desc",
+              "data": {}
+            }
+          ]
+        }
+      },
+      "position": [
+        693.6821541648973,
+        53.389483440603115
+      ],
+      "name": "Descriptor"
+    },
+    "7": {
+      "id": 7,
+      "data": {
+        "idx": 0
+      },
+      "inputs": {
+        "desc": {
+          "connections": [
+            {
+              "node": 6,
+              "output": "desc",
+              "data": {}
+            }
+          ]
+        }
+      },
+      "outputs": {
+        "addr": {
+          "connections": []
+        }
+      },
+      "position": [
+        988.2460797658175,
+        20.323670883283746
+      ],
+      "name": "Address"
+    },
+    "9": {
+      "id": 9,
+      "data": {
+        "key": "xpub6DywUwVSjaQuHySfPtkSVc8XyjxyFzCJ9e2e3KQMf5QBycShzmB47q9Jtbf1uPQtFVLgpQ1dLwrR3UCBoEyNxEX2c2WzPEss1LZRp6o9DEV/0/*"
+      },
+      "inputs": {
+        "key": {
+          "connections": []
+        }
+      },
+      "outputs": {
+        "key": {
+          "connections": [
+            {
+              "node": 10,
+              "input": "pol1",
+              "data": {}
+            }
+          ]
+        }
+      },
+      "position": [
+        -136.09896079872425,
+        334.11622465974835
+      ],
+      "name": "Key"
+    },
+    "10": {
+      "id": 10,
+      "data": {
+        "ratio": 99
+      },
+      "inputs": {
+        "pol1": {
+          "connections": [
+            {
+              "node": 9,
+              "output": "key",
+              "data": {}
+            }
+          ]
+        },
+        "pol2": {
+          "connections": [
+            {
+              "node": 13,
+              "output": "pol",
+              "data": {}
+            }
+          ]
+        }
+      },
+      "outputs": {
+        "pol": {
+          "connections": [
+            {
+              "node": 11,
+              "input": "pol2",
+              "data": {}
+            }
+          ]
+        }
+      },
+      "position": [
+        140.62768701089715,
+        227.67396146156142
+      ],
+      "name": "Or"
+    },
+    "11": {
+      "id": 11,
+      "data": {},
+      "inputs": {
+        "pol1": {
+          "connections": [
+            {
+              "node": 3,
+              "output": "key",
+              "data": {}
+            }
+          ]
+        },
+        "pol2": {
+          "connections": [
+            {
+              "node": 10,
+              "output": "pol",
+              "data": {}
+            }
+          ]
+        }
+      },
+      "outputs": {
+        "pol": {
+          "connections": [
+            {
+              "node": 6,
+              "input": "pol",
+              "data": {}
+            }
+          ]
+        }
+      },
+      "position": [
+        418.6244747244316,
+        63.23954774359686
+      ],
+      "name": "And"
+    },
+    "13": {
+      "id": 13,
+      "data": {
+        "num": 12960
+      },
+      "inputs": {},
+      "outputs": {
+        "pol": {
+          "connections": [
+            {
+              "node": 10,
+              "input": "pol2",
+              "data": {}
+            }
+          ]
+        }
+      },
+      "position": [
+        -139.81149767680319,
+        521.6599845978153
+      ],
+      "name": "Older"
+    }
+  }
+}

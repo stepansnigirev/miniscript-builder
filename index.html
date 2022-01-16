@@ -20,9 +20,19 @@
     </label>
   </div>
   <div id="rete" class="editor"></div>
-  <div id="inspector">
-    <div class="title">Selected node: <span id="node-name"></span></div>
-    <textarea id="node-output" disabled></textarea>
+  <div class="footer">
+    <div id="inspector" class="menu">
+      <div class="title">Selected node: <span id="node-name"></span></div>
+      <textarea id="node-output" disabled></textarea>
+    </div>
+    <div class="menu">
+      <div class="title">Export / Import</div>
+      <a onclick="exportJSON(this)" class="btn">Save as json file</a>
+      <input type="file" id="jsonfile" style="display: none;"/>
+      <label for="jsonfile" class="btn">
+          Load from file
+      </label>
+    </div>
   </div>
 
 <script src="https://cdn.jsdelivr.net/npm/rete@1.4.5/build/rete.min.js"></script>
