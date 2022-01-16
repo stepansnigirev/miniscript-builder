@@ -550,7 +550,7 @@ async function app_init(){
   });
   editor.use(AreaPlugin);
   // editor.use(CommentPlugin.default);
-  // editor.use(HistoryPlugin);
+  editor.use(HistoryPlugin);
   // editor.use(DockPlugin.default,{
   //   container: document.querySelector('#dock'),
   //   // itemClass: 'item' // default: dock-item 
