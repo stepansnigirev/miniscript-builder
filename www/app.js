@@ -533,6 +533,12 @@ document.getElementById("jsonfile").addEventListener("change", async (e) => {
   }
 });
 
+function arrangeNodes(){
+  editor.arrange();
+  editor.view.resize();
+  AreaPlugin.zoomAt(editor);
+}
+
 /*************************** APP MAIN *************************/
 
 function displayOut(node){
