@@ -603,6 +603,7 @@ async function app_init(){
   //   plugins: [VueRenderPlugin.default], // render plugins
   // });
   editor.use(ConnectionMasteryPlugin.default);
+  editor.use(AutoArrangePlugin.default); //, { margin: {x: 50, y: 50 }, depth: 0 }); // depth - max depth for arrange (0 - unlimited)
 
   window.engine = new Rete.Engine('demo@0.1.0');
 
