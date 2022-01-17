@@ -563,7 +563,7 @@ async function updateNetwork(){
   editor.trigger('process');
 }
 
-async function app_init(){
+window.app_init = async ()=>{
   var container = document.querySelector('#rete');
   let AndC = new AndComponent();
   let AfterC = new TimeComponent("After");
