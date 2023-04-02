@@ -8,6 +8,6 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 wasm-bindgen = { version = "0.2.78" }
-# miniscript = {version = "6.0.1", features=["compiler"]}
-miniscript = {git = "https://github.com/rust-bitcoin/rust-miniscript.git", branch = "master", features=["compiler"]}
+# miniscript = {version = "9.0.1", features=["compiler"]}
+miniscript = {git = "https://github.com/rust-bitcoin/rust-miniscript.git", rev = "4a3ba11c2fd5063be960741d557f3f7a28041e1f", features=["compiler"]}
 bip39 = "1.0.1"

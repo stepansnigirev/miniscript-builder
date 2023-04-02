@@ -6,7 +6,7 @@ use miniscript::bitcoin::util::bip32::{
     ExtendedPrivKey, ExtendedPubKey, DerivationPath
 };
 use miniscript::policy::Concrete;
-use miniscript::{Descriptor, DescriptorPublicKey, TranslatePk2, DescriptorTrait};
+use miniscript::{Descriptor, DescriptorPublicKey};
 
 use bip39::Mnemonic;
 
@@ -37,7 +37,8 @@ pub fn address(desc: &str, idx: u32, network: &str) -> Result<JsValue, JsValue>{
     }
     let secp_ctx = secp256k1::Secp256k1::verification_only();
     let desc = jserr!(Descriptor::<DescriptorPublicKey>::from_str(desc));
-    let desc = jserr!(desc.derive(idx).translate_pk2(|xpk| xpk.derive_public_key(&secp_ctx).map(bitcoin::PublicKey::new)));
+    let desc = jserr!(desc.at_derivation_index(idx));
+    let desc = jserr!(desc.derived_descriptor(&secp_ctx));
     let addr = jserr!(desc.address(network));
     Ok(addr.to_string().into())
 }

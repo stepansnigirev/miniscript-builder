@@ -3,5 +3,6 @@
 ## build
 
 ```sh
+cargo build
 wasm-pack build --target web
 ```

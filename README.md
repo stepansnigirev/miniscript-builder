@@ -13,6 +13,7 @@ Try online: [miniscript.fun](https://miniscript.fun)
 You will need [rust](https://www.rust-lang.org/tools/install) and [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/), then:
 ```
 cd rust
+cargo build
 wasm-pack build --target web
 cd ..
 python3 -m http.server
